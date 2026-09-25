@@ -48,4 +48,46 @@ newSessionButton.addEventListener("click", async () => {
 
 initializeSession();
 
+//cargar los audios
+async function loadAudioFiles() {
+    const response = await fetch("/api/audios");
 
+    const data = await response.json();
+
+    const audioSelect = document.getElementById("audioSelect");
+
+    data.audio.forEach(fileName => {
+        const option = document.createElement("option");
+
+        option.value = fileName;
+        option.textContent = fileName;
+
+        audioSelect.appendChild(option);
+    });
+}
+
+loadAudioFiles();
+
+// reproducir los audios
+const audioSelect =
+    document.getElementById("audioSelect");
+
+const audioPlayer =
+    document.getElementById("audioPlayer");
+
+const playButton =
+    document.getElementById("playButton");
+
+playButton.addEventListener("click", () => {
+
+    const selectedAudio = audioSelect.value;
+
+    if (!selectedAudio) {
+        alert("Seleccioná un audio");
+        return;
+    }
+
+    audioPlayer.src = `/audio/${selectedAudio}`;
+
+    audioPlayer.play();
+});
