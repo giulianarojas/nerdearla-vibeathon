@@ -100,10 +100,20 @@
                 </div>
             </div>
 
+            <!-- Selector de visualización de subtítulos -->
+            <div class="view-mode-bar">
+                <span class="view-mode-label">👁️ Ver subtítulos:</span>
+                <div class="view-mode-buttons">
+                    <button type="button" class="view-btn active" data-view="both">Ambos</button>
+                    <button type="button" class="view-btn" data-view="original">Solo Original</button>
+                    <button type="button" class="view-btn" data-view="translation">Solo Traducción</button>
+                </div>
+            </div>
+
             <!-- Cuadros de subtítulos sincronizados -->
             <div class="captions-grid">
                 <!-- Idioma Original -->
-                <article class="caption-card caption-original">
+                <article id="cardOriginal" class="caption-card caption-original">
                     <div class="caption-header">
                         <span class="caption-badge badge-original">ORIGINAL (INGLÉS)</span>
                         <span class="caption-sublabel">Audio en vivo</span>
@@ -114,7 +124,7 @@
                 </article>
 
                 <!-- Traducción Español -->
-                <article class="caption-card caption-translation">
+                <article id="cardTranslation" class="caption-card caption-translation">
                     <div class="caption-header">
                         <span class="caption-badge badge-translation">ESPAÑOL (TRADUCCIÓN)</span>
                         <span class="caption-sublabel">Simultáneo</span>

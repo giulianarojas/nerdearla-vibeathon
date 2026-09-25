@@ -481,6 +481,51 @@ function setupEventListeners() {
         }
         updateStatus("finished");
     });
+
+    setupViewModeSelector();
+}
+
+// --- Selector de Modo de Visualización (Ambos / Solo Original / Solo Traducción) ---
+function setupViewModeSelector() {
+    const viewButtons = document.querySelectorAll(".view-btn");
+    const cardOriginal = document.getElementById("cardOriginal");
+    const cardTranslation = document.getElementById("cardTranslation");
+
+    const storageKey = `nerdearla_view_${sessionId || "default"}`;
+    let currentMode = "both";
+    try {
+        currentMode = sessionStorage.getItem(storageKey) || "both";
+    } catch (e) {}
+
+    function applyViewMode(mode) {
+        viewButtons.forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.view === mode);
+        });
+
+        if (mode === "original") {
+            cardOriginal?.classList.remove("hidden");
+            cardTranslation?.classList.add("hidden");
+        } else if (mode === "translation") {
+            cardOriginal?.classList.add("hidden");
+            cardTranslation?.classList.remove("hidden");
+        } else {
+            // "both"
+            cardOriginal?.classList.remove("hidden");
+            cardTranslation?.classList.remove("hidden");
+        }
+
+        try {
+            sessionStorage.setItem(storageKey, mode);
+        } catch (e) {}
+    }
+
+    viewButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            applyViewMode(btn.dataset.view);
+        });
+    });
+
+    applyViewMode(currentMode);
 }
 
 // Iniciar app al cargar el DOM
