@@ -81,7 +81,7 @@ nerdearla-vibeathon/
 1. **`SessionManager`**: Controla el estado de cada sala concurrente, sus fuentes de audio y eventos de pausa asíncronos (`asyncio.Event`), asegurando aislamiento total entre escenarios.
 2. **`AudioSource` & Implementaciones (`MP3AudioSource`, `YouTubeAudioSource`)**: Convierten cualquier fuente a PCM mono 16 kHz y entregan chunks controlados para emular un stream de escenario en tiempo real.
 3. **`GeminiService`**: Gestiona la sesión Live con Gemini (`gemini-3.5-live-translate-preview`), configurando modalidades de audio bidireccional y traducción simultánea.
-4. **`app.js`**: Controla la visualización de los subtítulos, vinculando la cola de mensajes con la propiedad `currentTime` del reproductor nativo para garantizar sincronización perfecta.
+4. **`app.js`**: Controla la visualización de los subtítulos, vinculando la cola de mensajes con la propiedad `currentTime` del reproductor nativo para garantizar sincronización.
 
 ---
 

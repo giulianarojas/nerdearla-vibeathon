@@ -92,8 +92,12 @@ class MP3AudioSource(AudioSource):
             while True:
                 # 1. Chequeo de pausa inmediato: no leer ni avanzar si está pausado
                 if self.is_paused_check:
+                    was_paused = False
                     while self.is_paused_check():
+                        was_paused = True
                         await asyncio.sleep(0.02)
+                    if was_paused:
+                        start_time = loop.time() - (self.bytes_sent / bytes_per_sec)
                 elif self.pause_event is not None and not self.pause_event.is_set():
                     await self.pause_event.wait()
                     start_time = loop.time() - (self.bytes_sent / bytes_per_sec)

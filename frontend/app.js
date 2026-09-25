@@ -89,10 +89,8 @@ function connectWebSocket(sessionId) {
 function handleIncomingMessage(message) {
     const audioPlayer = document.getElementById("audioPlayer");
 
-    // REGLA FUNDAMENTAL DE PAUSA:
-    // Si el reproductor está en pausa o detenido, NINGÚN subtítulo entrante
-    // debe modificar el DOM. La pantalla se congela inmediatamente.
-    const isPaused = isAudioPaused || (audioPlayer ? audioPlayer.paused : true);
+    // Si el reproductor está pausado, congelamos el DOM de inmediato
+    const isPaused = isAudioPaused || (audioPlayer ? audioPlayer.paused : false);
 
     if (message.type === "original") {
         if (message.text && !isPaused) {
@@ -113,19 +111,18 @@ function handleIncomingMessage(message) {
 // --- Sincronización Temporal de Subtítulos con Reloj Maestro ---
 function queueOrDisplayCaption(type, text, timestamp) {
     const audioPlayer = document.getElementById("audioPlayer");
-    const currentTime = audioPlayer ? audioPlayer.currentTime : 0;
-
-    // Si no hay reproductor o no tiene timestamp, se muestra directo
-    if (!audioPlayer || timestamp === undefined || timestamp === null) {
-        renderCaption(type, text);
-        return;
+    const isPaused = isAudioPaused || (audioPlayer ? audioPlayer.paused : false);
+    if (isPaused) {
+        return; // Congelado total en pausa
     }
 
-    // Margen de tolerancia de 0.3s para fluidez
-    if (timestamp <= currentTime + 0.35) {
+    const currentTime = audioPlayer ? audioPlayer.currentTime : 0;
+
+    // Si el timestamp es inmediato o dentro del margen de reproducción activa (hasta 1.2s), mostramos directo
+    if (!audioPlayer || timestamp === undefined || timestamp === null || timestamp <= currentTime + 1.2) {
         renderCaption(type, text);
     } else {
-        // Si el modelo inferió con anticipación, lo encolamos para el segundo exacto
+        // Encolamos para el segundo correspondiente
         captionQueue[type].push({ text, timestamp });
         captionQueue[type].sort((a, b) => a.timestamp - b.timestamp);
     }
@@ -141,18 +138,19 @@ function processCaptionQueue() {
 
     ["original", "translation"].forEach(type => {
         const queue = captionQueue[type];
-        while (queue.length > 0 && queue[0].timestamp <= currentTime + 0.3) {
+        while (queue.length > 0 && queue[0].timestamp <= currentTime + 0.8) {
             const item = queue.shift();
             renderCaption(type, item.text);
+        }
+        // Evitar acumulación de elementos viejos
+        if (queue.length > 10) {
+            captionQueue[type] = queue.slice(-3);
         }
     });
 }
 
 function renderCaption(type, text) {
-    const audioPlayer = document.getElementById("audioPlayer");
-    if (audioPlayer && audioPlayer.paused) {
-        return; // Guardrail adicional de seguridad
-    }
+    if (!text) return;
     const element = document.getElementById(type);
     if (element) {
         element.textContent = text;
