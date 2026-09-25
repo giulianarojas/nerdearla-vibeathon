@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from backend.session_manager import SessionManager
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi import WebSocket
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 AUDIO_DIR = BASE_DIR / "audio"
@@ -67,3 +68,38 @@ async def list_audio():
         "audio": sorted(audio_files)
     }
 
+@app.websocket("/ws/{session_id}")
+async def websocket_endpoint(
+    websocket: WebSocket,
+    session_id: str
+):
+    await websocket.accept()
+
+    session = session_manager.get_session(session_id)
+
+    if not session:
+        await websocket.send_json({
+            "type": "error",
+            "message": "Sala no encontrada"
+        })
+
+        await websocket.close()
+
+        return
+
+    try:
+        while True:
+            message = await websocket.receive_json()
+
+            print(
+                f"[{session_id}] "
+                f"Mensaje recibido:",
+                message
+            )
+
+    except Exception as error:
+        print(
+            f"[{session_id}] "
+            f"WebSocket cerrado:",
+            error
+        )

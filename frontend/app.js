@@ -1,3 +1,5 @@
+let socket;
+
 async function initializeSession() {
     const params = new URLSearchParams(window.location.search);
 
@@ -22,8 +24,49 @@ async function initializeSession() {
     }
 
     document.getElementById("roomName").textContent = sessionId;
+
+    connectWebSocket(sessionId);
+}
+//websocket
+
+function connectWebSocket(sessionId) {
+
+    socket = new WebSocket(
+        `ws://${window.location.host}/ws/${sessionId}`
+    );
+
+    socket.onopen = () => {
+        console.log(
+            "WebSocket conectado:",
+            sessionId
+        );
+    };
+
+    socket.onmessage = (event) => {
+
+        const message = JSON.parse(event.data);
+
+        console.log(
+            "Mensaje recibido:",
+            message
+        );
+    };
+
+    socket.onerror = (error) => {
+        console.error(
+            "WebSocket error:",
+            error
+        );
+    };
+
+    socket.onclose = () => {
+        console.log(
+            "WebSocket cerrado"
+        );
+    };
 }
 
+//boton de nueva sala
 const newSessionButton =
     document.getElementById("newSessionButton");
 
@@ -46,8 +89,6 @@ newSessionButton.addEventListener("click", async () => {
     );
 });
 
-initializeSession();
-
 //cargar los audios
 async function loadAudioFiles() {
     const response = await fetch("/api/audios");
@@ -65,8 +106,6 @@ async function loadAudioFiles() {
         audioSelect.appendChild(option);
     });
 }
-
-loadAudioFiles();
 
 // reproducir los audios
 const audioSelect =
@@ -91,3 +130,6 @@ playButton.addEventListener("click", () => {
 
     audioPlayer.play();
 });
+
+loadAudioFiles();
+initializeSession();
