@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nerdearla Live Captions</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header>
+            <h1>Nerdearla Live Captions</h1>
+            <p>Transcripción y traducción en tiempo real</p>
+        </header>
+
+        <section class="session-selector">
+
+            <label for="session">
+                Sesión
+            </label>
+
+            <select id="session">
+                <option value="session-1">
+                    Sesión 1
+                </option>
+
+                <option value="session-2">
+                    Sesión 2
+                </option>
+            </select>
+
+            <button id="connect">
+                Conectar
+            </button>
+
+        </section>
+
+        <section class="status">
+            <span id="status-indicator">●</span>
+            <span id="status-text">Desconectado</span>
+        </section>
+
+        <section class="captions">
+
+            <div class="caption-box">
+
+                <h2>Original</h2>
+
+                <p id="original">
+                    Esperando audio...
+                </p>
+
+            </div>
+
+            <div class="caption-box">
+
+                <h2>Español</h2>
+
+                <p id="translation">
+                    Esperando traducción...
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="/static/app.js"></script>
+
+</body>
+</html>
