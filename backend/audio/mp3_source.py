@@ -32,10 +32,14 @@ class MP3AudioSource(AudioSource):
         file_path: Path,
         start_offset: float = 0.0,
         pause_event: asyncio.Event = None,
+        is_paused_check=None,
+        get_client_time=None,
     ):
         self.file_path = Path(file_path)
         self.start_offset = max(0.0, float(start_offset))
         self.pause_event = pause_event
+        self.is_paused_check = is_paused_check
+        self.get_client_time = get_client_time
         self.bytes_sent = 0
         self.current_position = self.start_offset
 
@@ -49,7 +53,7 @@ class MP3AudioSource(AudioSource):
         """
         Ejecuta FFmpeg y entrega audio PCM
         en chunks de aproximadamente 100 ms con
-        compensación precisa de tiempo real y soporte de pausa.
+        gobernanza estricta de tiempo y pausa.
         """
         ffmpeg_cmd = [
             "ffmpeg",
@@ -64,16 +68,12 @@ class MP3AudioSource(AudioSource):
         ffmpeg_cmd.extend([
             "-i",
             str(self.file_path),
-            # Audio PCM sin comprimir
             "-f",
             "s16le",
-            # Mono
             "-ac",
             "1",
-            # 16 kHz
             "-ar",
             "16000",
-            # Salida por stdout
             "pipe:1",
         ])
 
@@ -90,10 +90,25 @@ class MP3AudioSource(AudioSource):
 
         try:
             while True:
-                if self.pause_event is not None and not self.pause_event.is_set():
+                # 1. Chequeo de pausa inmediato: no leer ni avanzar si está pausado
+                if self.is_paused_check:
+                    while self.is_paused_check():
+                        await asyncio.sleep(0.02)
+                elif self.pause_event is not None and not self.pause_event.is_set():
                     await self.pause_event.wait()
-                    # Al reanudar, recalibramos el reloj para no correr de golpe
                     start_time = loop.time() - (self.bytes_sent / bytes_per_sec)
+
+                # 2. Puerta de Reloj Maestro: no leer por delante del cliente (+0.25s)
+                if self.get_client_time:
+                    client_t = self.get_client_time()
+                    while self.current_position > client_t + 0.25:
+                        if self.is_paused_check and self.is_paused_check():
+                            break
+                        await asyncio.sleep(0.02)
+                        client_t = self.get_client_time()
+
+                if self.is_paused_check and self.is_paused_check():
+                    continue
 
                 try:
                     chunk = await asyncio.wait_for(

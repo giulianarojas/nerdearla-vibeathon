@@ -13,10 +13,11 @@ class SessionManager:
     Sincronizado con el Reloj Maestro del frontend (currentTime).
     """
 
-    def __init__(self, max_sessions: int = 10):
+    def __init__(self, max_sessions: int = 10, gemini_service_factory=None):
         self.sessions = {}
         self.counter = 0
         self.max_sessions = max_sessions
+        self.gemini_service_factory = gemini_service_factory or GeminiService
 
     def create_session(self) -> str:
         if len(self.sessions) >= self.max_sessions:
@@ -119,6 +120,8 @@ class SessionManager:
         source = MP3AudioSource(
             audio_path,
             start_offset=new_position,
+            is_paused_check=lambda: session.get("is_paused", False),
+            get_client_time=lambda: session.get("client_current_time", 0.0),
         )
         session["audio_source"] = source
         session["audio"] = str(audio_identifier)
@@ -157,6 +160,8 @@ class SessionManager:
             audio_source = MP3AudioSource(
                 audio_path,
                 start_offset=start_offset,
+                is_paused_check=lambda: session.get("is_paused", False),
+                get_client_time=lambda: session.get("client_current_time", 0.0),
             )
         else:
             audio_source = audio_source_or_path
@@ -190,7 +195,7 @@ class SessionManager:
                 "status": "running",
             })
 
-            gemini = GeminiService()
+            gemini = self.gemini_service_factory()
 
             async with await gemini.connect() as gemini_session:
 
