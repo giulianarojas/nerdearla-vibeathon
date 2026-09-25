@@ -3,64 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nerdearla Live Captions</title>
+    <title>Nerdearla Live Captions — Transcripción y Traducción en Tiempo Real</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
     <main class="container">
 
-        <header>
-            <h1>Nerdearla Live Captions</h1>
-            <p>Transcripción y traducción en tiempo real</p>
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="brand-badge">VIBEATHON 2026</span>
+                <h1>nerdearla <span>live captions</span></h1>
+            </div>
+            <p class="subtitle">Transcripción en tiempo real y traducción simultánea inglés &rarr; español con IA</p>
         </header>
 
-        <section id="roomView">
+        <section id="roomView" class="room-view">
 
             <div class="room-header">
-                <h2>Estás en: <span id="roomName">—</span></h2>
-                <button id="newSessionButton">➕ Nueva sala</button>
-            </div>
-
-            <div class="audio-selector">
-                <label for="audioSelect">
-                    Audio de conferencia
-                </label>
-
-                <select id="audioSelect">
-                    <option value="">
-                        Seleccionar audio...
-                    </option>
-                </select>   
-
-                <button id="playButton">
-                    ▶ Reproducir
-                </button>
-
-                <audio id="audioPlayer" controls></audio>
-
-            </div>
-
-            <div class="status">
-                <span id="status-indicator">●</span>
-                <span id="status-text">Desconectado</span>
-            </div>
-
-            <div class="captions">
-                <div class="caption-box">
-                    <h2>Original</h2>
-                    <p id="original">Esperando audio...</p>
+                <div class="room-meta">
+                    <span class="room-label">Sala activa:</span>
+                    <span id="roomName" class="room-id">—</span>
                 </div>
-                <div class="caption-box">
-                    <h2>Español</h2>
-                    <p id="translation">Esperando traducción...</p>
+                <div class="room-actions">
+                    <button id="newSessionButton" class="btn btn-secondary">
+                        <span class="btn-icon">➕</span> Nueva sala
+                    </button>
                 </div>
+            </div>
+
+            <!-- Panel de selección de fuente de audio -->
+            <div class="source-card">
+                <div class="source-tabs">
+                    <button type="button" class="tab-btn active" id="tabLocal">📁 Audio Local</button>
+                    <button type="button" class="tab-btn" id="tabYoutube">📹 Video de YouTube</button>
+                </div>
+
+                <!-- Modo Audio Local -->
+                <div id="localSourcePanel" class="source-panel active">
+                    <div class="input-row">
+                        <div class="field-group">
+                            <label for="audioSelect">Seleccionar charla de prueba:</label>
+                            <select id="audioSelect">
+                                <option value="">Cargando audios disponibles...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modo YouTube -->
+                <div id="youtubeSourcePanel" class="source-panel">
+                    <div class="input-row">
+                        <div class="field-group field-grow">
+                            <label for="youtubeUrlInput">Pegar enlace de YouTube:</label>
+                            <input 
+                                type="url" 
+                                id="youtubeUrlInput" 
+                                placeholder="https://www.youtube.com/watch?v=..." 
+                                autocomplete="off"
+                            >
+                        </div>
+                        <button type="button" id="loadYoutubeButton" class="btn btn-primary">
+                            Extraer audio
+                        </button>
+                    </div>
+                    <div id="youtubeInfo" class="youtube-info hidden">
+                        <span class="yt-badge">YouTube</span>
+                        <span id="youtubeTitle" class="yt-title"></span>
+                        <span id="youtubeDuration" class="yt-duration"></span>
+                    </div>
+                </div>
+
+                <!-- Barra de reproducción sincronizada -->
+                <div class="playback-bar">
+                    <button id="playButton" class="btn btn-accent">
+                        ▶ Reproducir
+                    </button>
+                    <div class="audio-wrapper">
+                        <audio id="audioPlayer" controls preload="metadata"></audio>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado de la sesión -->
+            <div class="status-bar">
+                <div class="status-indicator-wrap">
+                    <span id="status-indicator" class="status-dot"></span>
+                    <span id="status-text" class="status-label">Desconectado</span>
+                </div>
+                <div id="syncTimeInfo" class="sync-info">
+                    Tiempo de audio: <span id="currentTimeDisplay">00:00</span>
+                </div>
+            </div>
+
+            <!-- Cuadros de subtítulos sincronizados -->
+            <div class="captions-grid">
+                <!-- Idioma Original -->
+                <article class="caption-card caption-original">
+                    <div class="caption-header">
+                        <span class="caption-badge badge-original">ORIGINAL (INGLÉS)</span>
+                        <span class="caption-sublabel">Audio en vivo</span>
+                    </div>
+                    <div class="caption-body">
+                        <p id="original" class="caption-text">Esperando inicio de reproducción...</p>
+                    </div>
+                </article>
+
+                <!-- Traducción Español -->
+                <article class="caption-card caption-translation">
+                    <div class="caption-header">
+                        <span class="caption-badge badge-translation">ESPAÑOL (TRADUCCIÓN)</span>
+                        <span class="caption-sublabel">Simultáneo</span>
+                    </div>
+                    <div class="caption-body">
+                        <p id="translation" class="caption-text">Esperando traducción simultánea...</p>
+                    </div>
+                </article>
             </div>
 
         </section>
 
     </main>
+
+    <footer class="app-footer">
+        <p>Desarrollado para <strong>Nerdearla Vibeathon 2026</strong> &bull; Accesibilidad Open Source a escala con Gemini</p>
+    </footer>
 
     <script src="/static/app.js"></script>
 </body>
