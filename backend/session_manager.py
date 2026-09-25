@@ -159,22 +159,8 @@ class SessionManager:
 
         except Exception as error:
 
-            print(
-                f"[{session_id}] "
-                f"Session error:",
-                error,
-            )
-
-            if session:
-
-                session["status"] = "error"
-
-            try:
-
-                await websocket.send_json({
-                    "type": "error",
-                    "message": str(error),
-                })
-
-            except Exception:
-                pass
+            import traceback
+            print(f"[{session_id}] Session error TIPO: {type(error).__name__}")
+            print(f"[{session_id}] Session error MSG: {repr(error)}")
+            print(f"[{session_id}] Traceback:")
+            traceback.print_exc()

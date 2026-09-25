@@ -1,9 +1,10 @@
 let socket;
+let sessionId;
 
 async function initializeSession() {
     const params = new URLSearchParams(window.location.search);
 
-    let sessionId = params.get("sala");
+    sessionId = params.get("sala");
 
     if (!sessionId) {
         const response = await fetch("/api/sessions", {
@@ -42,14 +43,40 @@ function connectWebSocket(sessionId) {
         );
     };
 
-    socket.onmessage = (event) => {
+   socket.onmessage = (event) => {
 
-        const message = JSON.parse(event.data);
+        const message =
+            JSON.parse(event.data);
 
-        console.log(
-            "Mensaje recibido:",
-            message
-        );
+        if (message.type === "original") {
+
+            document.getElementById(
+                "original"
+            ).textContent = message.text;
+        }
+
+        if (message.type === "translation") {
+
+            document.getElementById(
+                "translation"
+            ).textContent = message.text;
+        }
+
+        if (message.type === "status") {
+
+            updateStatus(
+                message.status
+            );
+        }
+
+        if (message.type === "error") {
+
+            console.error(
+                message.message
+            );
+
+            updateStatus("error");
+        }
     };
 
     socket.onerror = (error) => {
@@ -66,6 +93,33 @@ function connectWebSocket(sessionId) {
     };
 }
 
+function updateStatus(status) {
+    const textElement = document.getElementById("status-text");
+    const indicator = document.getElementById("status-indicator");
+
+    const labels = {
+        created: "Preparando",
+        running: "En vivo",
+        finished: "Finalizado",
+        cancelled: "Cancelado",
+        error: "Error"
+    };
+
+    textElement.textContent = labels[status] || status;
+
+    // cambia el color del indicador según estado
+    const colors = {
+        created: "#94a3b8",   // gris
+        running: "#22c55e",   // verde
+        finished: "#94a3b8",  // gris
+        cancelled: "#94a3b8", // gris
+        error: "#ef4444"      // rojo
+    };
+
+    if (indicator) {
+        indicator.style.color = colors[status] || "#94a3b8";
+    }
+}
 //boton de nueva sala
 const newSessionButton =
     document.getElementById("newSessionButton");
@@ -117,7 +171,7 @@ const audioPlayer =
 const playButton =
     document.getElementById("playButton");
 
-playButton.addEventListener("click", () => {
+playButton.addEventListener("click", async() => {
 
     const selectedAudio = audioSelect.value;
 
@@ -126,9 +180,55 @@ playButton.addEventListener("click", () => {
         return;
     }
 
-    audioPlayer.src = `/audio/${selectedAudio}`;
+    try {
 
-    audioPlayer.play();
+        const response = await fetch(
+            `/api/sessions/${sessionId}/start`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    audio: selectedAudio
+                })
+            }
+        );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+
+            alert(
+                data.detail ||
+                "No se pudo iniciar la sesión"
+            );
+
+            return;
+        }
+
+        audioPlayer.src =
+            `/audio/${selectedAudio}`;
+
+        await audioPlayer.play();
+
+        updateStatus("running");
+
+    } catch (error) {
+
+        console.error(
+            "Error iniciando sesión:",
+            error
+        );
+
+        alert(
+            "No se pudo iniciar la sesión."
+        );
+    }
 });
 
 loadAudioFiles();

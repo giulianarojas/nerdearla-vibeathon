@@ -90,3 +90,9 @@ class MP3AudioSource(AudioSource):
                 process.terminate()
 
             await process.wait()
+
+            if process.stdout:
+                process.stdout._transport.close()
+       
+            if process.stderr:
+             process.stderr._transport.close()
