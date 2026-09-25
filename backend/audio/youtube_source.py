@@ -41,10 +41,38 @@ class YouTubeAudioSource(AudioSource):
         patterns = [
             r"^(https?://)?(www\.)?(youtube\.com/watch\?v=[\w-]{11})",
             r"^(https?://)?(www\.)?(youtu\.be/[\w-]{11})",
+            r"^(https?://)?(youtube\.com/shorts/[\w-]{11})",
             r"^(https?://)?(www\.)?(youtube\.com/shorts/[\w-]{11})",
+            r"^(https?://)?(youtube\.com/live/[\w-]{11})",
             r"^(https?://)?(www\.)?(youtube\.com/live/[\w-]{11})",
         ]
         return any(re.match(p, url.strip()) for p in patterns)
+
+    @staticmethod
+    def extract_video_id(url: str) -> Optional[str]:
+        """Extrae el ID de 11 caracteres del video de YouTube mediante regex."""
+        match = re.search(r"(?:v=|\/|be\/|shorts\/|live\/)([0-9A-Za-z_-]{11})", url.strip())
+        return match.group(1) if match else None
+
+    @staticmethod
+    def _clean_error(err: Exception) -> str:
+        """Limpia secuencias de escape ANSI y formatea mensajes de error de forma legible."""
+        msg = str(err)
+        # Eliminar secuencias ANSI tipo [0;31m
+        msg = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", msg)
+        msg = re.sub(r"\[0;[0-9]+m", "", msg)
+        msg = re.sub(r"\[0m", "", msg)
+
+        if "getaddrinfo failed" in msg or "11001" in msg:
+            return "No se pudo conectar a YouTube (error de resolución DNS / conexión a internet). Verificá tu conexión a la red."
+        if "Sign in to confirm you" in msg or "bot" in msg.lower():
+            return "YouTube ha solicitado verificación para este video. Probá con otra charla o utilizá los audios locales de prueba."
+        if "429" in msg or "Too Many Requests" in msg:
+            return "Límite de solicitudes de YouTube alcanzado temporalmente. Probá en unos instantes o utilizá un audio local."
+
+        # Limpiar prefijos redundantes
+        msg = msg.replace("ERROR: [youtube]", "").strip()
+        return msg
 
     @classmethod
     def prepare_audio(cls, url: str, cache_dir: Path) -> dict:
@@ -60,24 +88,47 @@ class YouTubeAudioSource(AudioSource):
         cache_dir = Path(cache_dir)
         cache_dir.mkdir(parents=True, exist_ok=True)
 
-        ydl_opts_info = {
+        video_id = cls.extract_video_id(url)
+
+        # 1. Si el archivo ya existe en caché, retornarlo inmediatamente sin llamadas de red
+        if video_id:
+            cached_file = cache_dir / f"{video_id}.mp3"
+            if cached_file.exists():
+                return {
+                    "video_id": video_id,
+                    "title": f"Video ({video_id})",
+                    "duration": 0,
+                    "file_path": cached_file,
+                    "filename": cached_file.name,
+                }
+
+        # 2. Configuración optimizada de yt-dlp con clientes móviles para evitar errores 429 y bot checks
+        ydl_common_opts = {
             "quiet": True,
             "no_warnings": True,
-            "skip_download": True,
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["android", "ios", "mweb"]
+                }
+            }
         }
+
+        ydl_opts_info = dict(ydl_common_opts)
+        ydl_opts_info["skip_download"] = True
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts_info) as ydl:
                 info = ydl.extract_info(url, download=False)
         except Exception as err:
-            raise ValueError(f"No se pudo obtener información del video: {err}")
+            clean_msg = cls._clean_error(err)
+            raise ValueError(f"No se pudo obtener información del video: {clean_msg}")
 
         if not info:
             raise ValueError("No se encontraron datos para el video de YouTube especificado.")
 
-        video_id = info.get("id")
+        video_id = info.get("id") or video_id
         duration = info.get("duration") or 0
-        title = info.get("title", "Video de YouTube")
+        title = info.get("title", f"Video {video_id}")
 
         if duration > cls.MAX_DURATION_SECONDS:
             raise ValueError(
@@ -86,9 +137,10 @@ class YouTubeAudioSource(AudioSource):
 
         target_file = cache_dir / f"{video_id}.mp3"
 
-        # Si ya existe en caché, evitamos re-descargar
+        # 3. Descarga si no existe
         if not target_file.exists():
-            ydl_opts_download = {
+            ydl_opts_download = dict(ydl_common_opts)
+            ydl_opts_download.update({
                 "format": "bestaudio/best",
                 "outtmpl": str(cache_dir / f"{video_id}.%(ext)s"),
                 "postprocessors": [
@@ -98,18 +150,16 @@ class YouTubeAudioSource(AudioSource):
                         "preferredquality": "192",
                     }
                 ],
-                "quiet": True,
-                "no_warnings": True,
-            }
+            })
 
             try:
                 with yt_dlp.YoutubeDL(ydl_opts_download) as ydl:
                     ydl.download([url])
             except Exception as err:
-                raise RuntimeError(f"Error al descargar audio de YouTube: {err}")
+                clean_msg = cls._clean_error(err)
+                raise RuntimeError(f"Error al descargar audio de YouTube: {clean_msg}")
 
         if not target_file.exists():
-            # Buscar si se guardó con otra extensión de audio
             matching = list(cache_dir.glob(f"{video_id}.*"))
             if matching:
                 target_file = matching[0]

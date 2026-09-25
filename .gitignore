@@ -23,3 +23,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Audio cache
+audio/youtube_cache/
