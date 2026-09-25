@@ -1,5 +1,10 @@
 import asyncio
+import sys
 from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 from backend.audio.mp3_source import MP3AudioSource
 from backend.gemini_service import GeminiService
@@ -8,7 +13,7 @@ from backend.gemini_service import GeminiService
 async def main():
 
     audio_path = (
-        Path(__file__).resolve().parent.parent
+        BASE_DIR
         / "audio"
         / "charla-nerdearla-1.mp3"
     )
@@ -16,11 +21,11 @@ async def main():
     audio_source = MP3AudioSource(audio_path)
     gemini = GeminiService()
 
-    print("Conectando con Gemini...")
+    print("Conectando con Gemini...", flush=True)
 
     async with await gemini.connect() as session:
 
-        print("Gemini conectado.")
+        print("Gemini conectado.", flush=True)
 
         async def send_audio():
 
@@ -34,13 +39,14 @@ async def main():
 
                 await gemini.end_audio(session)
 
-                print("Audio enviado completamente.")
+                print("Audio enviado completamente.", flush=True)
 
             except Exception as error:
 
                 print(
                     "Error enviando audio:",
-                    error
+                    error,
+                    flush=True
                 )
 
         async def receive_transcriptions():
@@ -55,14 +61,16 @@ async def main():
 
                     print(
                         f"[{result['type']}] "
-                        f"{result['text']}"
+                        f"{result['text']}",
+                        flush=True
                     )
 
             except Exception as error:
 
                 print(
                     "Error recibiendo Gemini:",
-                    error
+                    error,
+                    flush=True
                 )
 
         await asyncio.gather(
