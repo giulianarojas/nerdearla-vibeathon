@@ -23,11 +23,53 @@ h1 {
     margin-bottom: 8px;
 }
 
-.session-selector {
+/* Cabecera de la sala: nombre a la izquierda, botón a la derecha */
+.room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+.room-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: normal;
+}
+
+.room-header h2 span {
+    font-weight: bold;
+    color: #60a5fa;
+}
+
+/* Botón "Nueva sala" */
+#newSessionButton {
+    padding: 12px 20px;
+    background: #22c55e;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#newSessionButton:hover {
+    background: #16a34a;
+}
+
+/* Selector de audio */
+.audio-selector {
     display: flex;
     gap: 12px;
     align-items: center;
     margin-bottom: 20px;
+}
+
+.audio-selector label {
+    opacity: 0.8;
 }
 
 select,
@@ -35,16 +77,36 @@ button {
     padding: 10px 14px;
     border-radius: 8px;
     border: none;
+    font-size: 15px;
+}
+
+select {
+    background: #1f2937;
+    color: white;
+    min-width: 240px;
 }
 
 button {
     cursor: pointer;
 }
 
-.status {
-    margin-bottom: 30px;
+#playButton {
+    background: #3b82f6;
+    color: white;
+    font-weight: bold;
 }
 
+#playButton:hover {
+    background: #2563eb;
+}
+
+/* Estado de conexión */
+.status {
+    margin-bottom: 30px;
+    opacity: 0.8;
+}
+
+/* Cuadros de subtítulos */
 .captions {
     display: grid;
     gap: 20px;
@@ -66,4 +128,5 @@ button {
 .caption-box p {
     font-size: 28px;
     line-height: 1.5;
+    margin: 0;
 }

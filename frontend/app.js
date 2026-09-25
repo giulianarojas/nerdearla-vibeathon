@@ -21,10 +21,31 @@ async function initializeSession() {
         return;
     }
 
-    console.log("Sala actual:", sessionId);
+    document.getElementById("roomName").textContent = sessionId;
 }
 
-initializeSession();
+const newSessionButton =
+    document.getElementById("newSessionButton");
 
+newSessionButton.addEventListener("click", async () => {
+
+    const response = await fetch("/api/sessions", {
+        method: "POST"
+    });
+
+    const data = await response.json();
+
+    if (!data.session_id) {
+        alert("No se pudo crear una nueva sala");
+        return;
+    }
+
+    window.open(
+        `/?sala=${data.session_id}`,
+        "_blank"
+    );
+});
+
+initializeSession();
 
 

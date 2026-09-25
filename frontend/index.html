@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Nerdearla Live Captions</title>
-
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -18,53 +16,35 @@
             <p>Transcripción y traducción en tiempo real</p>
         </header>
 
-        <section class="session-selector">
+        <section id="roomView">
 
-            <label for="session">
-                Sesión
-            </label>
-
-            <select id="session">
-                <option value="session-1">
-                    Sesión 1
-                </option>
-
-                <option value="session-2">
-                    Sesión 2
-                </option>
-            </select>
-
-            <button id="connect">
-                Conectar
-            </button>
-
-        </section>
-
-        <section class="status">
-            <span id="status-indicator">●</span>
-            <span id="status-text">Desconectado</span>
-        </section>
-
-        <section class="captions">
-
-            <div class="caption-box">
-
-                <h2>Original</h2>
-
-                <p id="original">
-                    Esperando audio...
-                </p>
-
+            <div class="room-header">
+                <h2>Estás en: <span id="roomName">—</span></h2>
+                <button id="newSessionButton">➕ Nueva sala</button>
             </div>
 
-            <div class="caption-box">
+            <div class="audio-selector">
+                <label for="audioSelect">Elegir audio:</label>
+                <select id="audioSelect">
+                    <option value="">— Seleccioná un audio —</option>
+                </select>
+                <button id="playButton">▶ Reproducir</button>
+            </div>
 
-                <h2>Español</h2>
+            <div class="status">
+                <span id="status-indicator">●</span>
+                <span id="status-text">Desconectado</span>
+            </div>
 
-                <p id="translation">
-                    Esperando traducción...
-                </p>
-
+            <div class="captions">
+                <div class="caption-box">
+                    <h2>Original</h2>
+                    <p id="original">Esperando audio...</p>
+                </div>
+                <div class="caption-box">
+                    <h2>Español</h2>
+                    <p id="translation">Esperando traducción...</p>
+                </div>
             </div>
 
         </section>
@@ -72,6 +52,5 @@
     </main>
 
     <script src="/static/app.js"></script>
-
 </body>
 </html>
